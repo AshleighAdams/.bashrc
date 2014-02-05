@@ -56,23 +56,6 @@ if [ -n "$force_color_prompt" ]; then
     fi
 fi
 
-if [ "$color_prompt" = yes ]; then
-# PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-    PS1="\[\e[1;32m\]\u\[\e[0m\]@\[\e[1;31m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\]\$ "
-else
-    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
-fi
-unset color_prompt force_color_prompt
-
-# If this is an xterm set the title to user@host:dir
-case "$TERM" in
-xterm*|rxvt*)
-    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-    ;;
-*)
-    ;;
-esac
-
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
@@ -114,4 +97,72 @@ fi
 alias rm='trash-put'
 
 # luarocks install cw
-if [ -n "$PS1" ]; then PATH=`cw-definitions-path`:$PATH; export PATH; fi
+#if [ -n "$PS1" ]; then PATH=`cw-definitions-path`:$PATH; export PATH; fi
+
+alias vps="ssh kobra@kateadams.eu"
+alias ..="cd .."
+# canonical, <offset> <bytes> <ascii>
+alias hexdump="hexdump -C"
+alias gource="gource --max-files 0 -i 0"
+alias markauto="sudo apt-mark auto "
+
+
+# 256 colour support
+if [ "$TERM" == "xterm" ]; then
+    # No it isn't, it's gnome-terminal
+    export TERM=xterm-256color
+fi
+if [ ! -z "$TERMCAP" ] && [ "$TERM" == "screen" ]; then                         
+    export TERMCAP=$(echo $TERMCAP | sed -e 's/Co#8/Co#256/g')                  
+fi 
+
+
+# Inject git branch into dir
+# Functions
+git_branch=""
+basedir=""
+default_colours=$'\e[m'
+function get_git_branch {
+	local dir=. head
+	local depth="0"
+	
+	until [ "$dir" -ef / ]; do
+		depth=`expr $depth + 1`
+		if [ -f "$dir/.git/HEAD" ]; then
+			head=$(< "$dir/.git/HEAD")
+			if [[ $head == ref:\ refs/heads/* ]]; then
+				git_branch=" (${head##*/})"
+			elif [[ $head != '' ]]; then
+				git_branch=" (detached)"
+			else
+				git_branch=" (unknown)"
+			fi
+			
+			PROMPT_DIRTRIM="$depth"
+			return
+		fi
+	dir="../$dir"
+	done
+	git_branch=""
+	PROMPT_DIRTRIM="4" # default value
+}
+
+PROMPT_COMMAND="get_git_branch; $PROMPT_COMMAND"
+
+if [ "$color_prompt" = yes ]; then
+	#PS1="\[\e[1;32m\]\u\[\e[0m\]@\[\e[1;31m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[1;39m\]\$git_branch\\[\e[0m\]$ "
+	PS1="\[\e[1;39m\e[38;5;208m\]\u\[\e[0m\]@\[\e[1;31m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[1;39m\e[1;32m\]\$git_branch\[\e[0m\]\$ "
+	#
+else
+	PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+fi
+unset color_prompt force_color_prompt
+
+# If this is an xterm set the title to user@host:dir
+case "$TERM" in
+xterm*|rxvt*)
+	PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+	;;
+*)
+	;;
+esac
