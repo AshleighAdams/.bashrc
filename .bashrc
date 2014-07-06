@@ -106,6 +106,7 @@ alias hexdump="hexdump -C"
 alias gource="gource --max-files 0 -i 0"
 alias markauto="sudo apt-mark auto "
 alias gedit="GTK_THEME=Adwaita:dark gedit"
+alias ping="ping -n" # don't lookup the hostname
 
 # 256 colour support
 if [ "$TERM" == "xterm" ]; then
