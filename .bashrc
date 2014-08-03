@@ -108,6 +108,9 @@ alias markauto="sudo apt-mark auto "
 alias gedit="GTK_THEME=Adwaita:dark gedit"
 alias ping="ping -n" # don't lookup the hostname
 
+# This clear is the real one.
+#alias clear="echo -ne '\033c'
+
 # 256 colour support
 if [ "$TERM" == "xterm" ]; then
     # No it isn't, it's gnome-terminal
