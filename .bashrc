@@ -106,11 +106,12 @@ alias hexdump="hexdump -C"
 alias gource="gource --max-files 0 -i 0"
 alias markauto="sudo apt-mark auto "
 alias gedit="GTK_THEME=Adwaita:dark gedit"
-alias ping="ping -n" # don't lookup the hostname
+alias ping="ping -n"
+alias make="make -j3" # make should use 3 threads to build
 
 # This clear is the real one.
-#alias clear="echo -ne '\033c'
-
+#alias clear="echo -ne '\033c'"
+
 # 256 colour support
 if [ "$TERM" == "xterm" ]; then
     # No it isn't, it's gnome-terminal
@@ -154,9 +155,11 @@ function get_git_branch {
 PROMPT_COMMAND="get_git_branch; $PROMPT_COMMAND"
 
 if [ "$color_prompt" = yes ]; then
-	#PS1="\[\e[1;32m\]\u\[\e[0m\]@\[\e[1;31m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[1;39m\]\$git_branch\\[\e[0m\]$ "
-	PS1="\[\e[1;39m\e[38;5;208m\]\u\[\e[0m\]@\[\e[1;31m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[1;39m\e[1;32m\]\$git_branch\[\e[0m\]\$ "
-	#
+	if [ "`hostname`" == "pc" ]; then
+		PS1="\[\e[1;39m\e[38;5;208m\]\u\[\e[0m\]@\[\e[1;31m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[1;39m\e[1;32m\]\$git_branch\[\e[0m\]\$ "
+	else
+		PS1="\[\e[1;32m\]\u\[\e[0m\]@\[\e[1;36m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[1;39m\e[1;32m\]\$git_branch\[\e[0m\]\$ "
+	fi
 else
 	PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
@@ -170,3 +173,4 @@ xterm*|rxvt*)
 *)
 	;;
 esac
+
