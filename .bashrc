@@ -136,11 +136,11 @@ function get_git_branch {
 		if [ -f "$dir/.git/HEAD" ]; then
 			head=$(< "$dir/.git/HEAD")
 			if [[ $head == ref:\ refs/heads/* ]]; then
-				git_branch=" (${head##*/})"
+				git_branch=" [${head##*/}]"
 			elif [[ $head != '' ]]; then
-				git_branch=" (detached)"
+				git_branch=" [detached*]"
 			else
-				git_branch=" (unknown)"
+				git_branch=" [unknown*]"
 			fi
 			
 			PROMPT_DIRTRIM="$depth"
@@ -155,11 +155,46 @@ function get_git_branch {
 PROMPT_COMMAND="get_git_branch; $PROMPT_COMMAND"
 
 if [ "$color_prompt" = yes ]; then
-	if [ "`hostname`" == "pc" ]; then
-		PS1="\[\e[1;39m\e[38;5;208m\]\u\[\e[0m\]@\[\e[1;31m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[1;39m\e[1;32m\]\$git_branch\[\e[0m\]\$ "
-	else
-		PS1="\[\e[1;32m\]\u\[\e[0m\]@\[\e[1;36m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[1;39m\e[1;32m\]\$git_branch\[\e[0m\]\$ "
+	bold="\e[1;39m"
+	orange="\e[38;5;208m"
+	red="\e[1;31m"
+	green="\e[1;32m"
+	yellow="\e[1;33m"
+	blue="\e[1;34m"
+	lightblue="\e[1;36m"
+	reset="\e[0m"
+	
+	user="\u"
+	host="\h"
+	path="\w"
+	prom="\$"
+	gitb="\[$bold$green\]\$git_branch\[$reset\]"
+	
+	if [[ "`whoami`" == "kobra" ]]; then
+		user="\[$bold$orange\]$user\[$reset\]"
+	elif [[ "`whoami`" == "root" ]]; then
+		user="\[$bold$red\]$user\[$reset\]"
 	fi
+	
+	if [[ "`hostname`" == "pc" ]]; then
+		host="\[$red\]$host\[$reset\]"
+	elif [[ "`hostname`" == "laptop" ]]; then
+		host="\[$green\]$host\[$reset\]"
+	elif [[ "`hostname`" == "vps" ]]; then
+		host="\[$lightblue\]$host\[$reset\]"
+	fi
+	
+	path="\[$blue\]$path"
+	
+	PS1=`echo "$user@$host:$path$gitb$prom "`
+	
+	#if [ "`hostname`" == "pc" ]; then
+	#	PS1="\[\e[1;39m\e[38;5;208m\]\u\[\e[0m\]@\[\e[1;31m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[1;39m\e[1;32m\]\$git_branch\[\e[0m\]\$ "
+	#elif [ "`hostname`" == "laptop" ]; then
+	#	PS1="\[\e[1;39m\e[38;5;208m\]\u\[\e[0m\]@\[\e[1;32m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[1;39m\e[1;32m\]\$git_branch\[\e[0m\]\$ "
+	#else
+	#	PS1="\[\e[1;32m\]\u\[\e[0m\]@\[\e[1;36m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[1;39m\e[1;32m\]\$git_branch\[\e[0m\]\$ "
+	#fi
 else
 	PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
@@ -173,4 +208,4 @@ xterm*|rxvt*)
 *)
 	;;
 esac
-
+
