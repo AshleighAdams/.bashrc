@@ -101,6 +101,7 @@ alias rm='trash-put'
 
 alias vps="ssh kobra@kateadams.eu"
 alias ..="cd .."
+shopt -s autocd # ../.. Dropbox/ etc... changes dir
 # canonical, <offset> <bytes> <ascii>
 alias hexdump="hexdump -C"
 alias gource="gource --max-files 0 -i 0"
