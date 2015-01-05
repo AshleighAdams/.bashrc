@@ -100,6 +100,8 @@ alias rm='trash-put'
 #if [ -n "$PS1" ]; then PATH=`cw-definitions-path`:$PATH; export PATH; fi
 
 alias vps="ssh kobra@kateadams.eu"
+alias vpn="sudo sshuttle --dns -r kobra@kateadams.eu 0/0"
+
 alias ..="cd .."
 shopt -s autocd # ../.. Dropbox/ etc... changes dir
 # canonical, <offset> <bytes> <ascii>
@@ -112,6 +114,42 @@ alias make="make -j3" # make should use 3 threads to build
 
 # This clear is the real one.
 #alias clear="echo -ne '\033c'"
+
+export DEBFULLNAME="Kate Adams"
+export DEBEMAIL="self@kateadams.eu"
+
+upload_luaflare_packages () {
+	# make sure we have our packages
+	if [[ ! -d packages/ ]]; then
+		echo "packages/ not found, exiting"
+		return 1
+	fi
+	
+	echo "removing old packages..."
+	vps rm luaflare-debian-repo/packages/luaflare*
+	
+	packages=`find packages/ -type f`
+	for package in $packages; do
+		echo "uploading $package..."
+		cat "$package" | vps "cat /dev/stdin > luaflare-debian-repo/$package"
+	done
+	
+	vps -t bash -c "'
+		cd luaflare-debian-repo
+		./update.sh
+	'"
+}
+
+upload_luaflare_docs () {
+	[[ ! -f build-docs.lua ]] && return 1
+	./build-docs.lua pdf
+	echo "uploading pdf..."
+	cat tmp/luaflare-documentation.pdf | vps "cat /dev/stdin > kateadams.eu/static/kateadams.eu/luaflare-documentation.pdf"
+
+	./build-docs.lua epub
+	echo "uploading epub..."
+	cat tmp/luaflare-documentation-final.epub | vps "cat /dev/stdin > kateadams.eu/static/kateadams.eu/luaflare-documentation.epub"
+}
 
 # 256 colour support
 if [ "$TERM" == "xterm" ]; then
@@ -168,7 +206,7 @@ if [ "$color_prompt" = yes ]; then
 	user="\u"
 	host="\h"
 	path="\w"
-	prom="\$"
+	prom="\\$"
 	gitb="\[$bold$green\]\$git_branch\[$reset\]"
 	
 	if [[ "`whoami`" == "kobra" ]]; then
