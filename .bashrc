@@ -102,6 +102,20 @@ alias rm='trash-put'
 alias vps="ssh kobra@kateadams.eu"
 alias vpn="sudo sshuttle --dns -r kobra@kateadams.eu 0/0"
 
+function cd {
+	if [[ ! -d $1 && "$1" != "-" ]]; then
+		# this will fail, but run it anyway so we get the correct output
+		command cd $1
+	else
+		command cd $1 > /dev/null || echo "failed" # make sure command is silent
+		# \r     = return to start of line
+		# \e[1A  = move cursor up a line
+		# \e[J   = clear everything after the cursor
+		[[ $? ]] && echo -ne "\r\e[1A\e[J" || echo $output;
+	fi
+}
+
+
 alias ..="cd .."
 shopt -s autocd # ../.. Dropbox/ etc... changes dir
 # canonical, <offset> <bytes> <ascii>
