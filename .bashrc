@@ -188,7 +188,7 @@ reset=`echo -en "\e[0m"`
 # Inject git branch into dir
 # Functions
 git_branch=""
-git_branch_sep="#"
+git_branch_sep=":"
 basedir=""
 default_colours=$'\e[m'
 _CAP_=`echo -ne "\01"`
