@@ -159,11 +159,11 @@ upload_luaflare_docs () {
 	[[ ! -f build-docs.lua ]] && return 1
 	./build-docs.lua pdf
 	echo "uploading pdf..."
-	cat tmp/luaflare-documentation.pdf | vps "cat /dev/stdin > kateadams.eu/static/kateadams.eu/luaflare-documentation.pdf"
+	cat tmp/luaflare-documentation.pdf | vps "cat /dev/stdin > kateadams.eu/static/\*.kateadams.eu/luaflare-documentation.pdf"
 
 	./build-docs.lua epub
 	echo "uploading epub..."
-	cat tmp/luaflare-documentation-final.epub | vps "cat /dev/stdin > kateadams.eu/static/kateadams.eu/luaflare-documentation.epub"
+	cat tmp/luaflare-documentation-final.epub | vps "cat /dev/stdin > kateadams.eu/static/\*.kateadams.eu/luaflare-documentation.epub"
 }
 
 # 256 colour support
@@ -176,11 +176,23 @@ if [ ! -z "$TERMCAP" ] && [ "$TERM" == "screen" ]; then
 fi 
 
 
+bold=`echo -en "\e[1;39m"`
+orange=`echo -en "\e[38;5;208m"`
+red=`echo -en "\e[1;31m"`
+green=`echo -en "\e[1;32m"`
+yellow=`echo -en "\e[1;33m"`
+blue=`echo -en "\e[1;34m"`
+lightblue=`echo -en "\e[1;36m"`
+reset=`echo -en "\e[0m"`
+
 # Inject git branch into dir
 # Functions
 git_branch=""
+git_branch_sep="#"
 basedir=""
 default_colours=$'\e[m'
+_CAP_=`echo -ne "\01"`
+_END_=`echo -ne "\02"`
 function get_git_branch {
 	local dir=. head
 	local depth="0"
@@ -190,13 +202,20 @@ function get_git_branch {
 		if [ -f "$dir/.git/HEAD" ]; then
 			head=$(< "$dir/.git/HEAD")
 			if [[ $head == ref:\ refs/heads/* ]]; then
-				git_branch=" [${head##*/}]"
+				git_branch="${head##*/}"
 			elif [[ $head != '' ]]; then
-				git_branch=" [detached*]"
+				git_branch="detached*"
 			else
-				git_branch=" [unknown*]"
+				git_branch="unknown*"
 			fi
 			
+			local col="$green"
+			local STAGED="`git status --porcelain 2>/dev/null| egrep "^ ?M" | wc -l`"
+			if [[ $STAGED != "0" ]]; then
+				git_branch="~$git_branch"
+			fi
+			
+			git_branch="$git_branch_sep$_CAP_$col$_END_$git_branch$_CAP_$reset$_END_"
 			PROMPT_DIRTRIM="$depth"
 			return
 		fi
@@ -206,23 +225,27 @@ function get_git_branch {
 	PROMPT_DIRTRIM="4" # default value
 }
 
-PROMPT_COMMAND="get_git_branch; $PROMPT_COMMAND"
+return_code=""
+return_code_gfx=""
+function get_return_code {
+	local ret="$?"
+	if [[ $ret == "0" ]]; then
+		return_code_gfx="";
+		return_code="";
+	else
+		return_code_gfx=`echo -e "$red"`;
+		return_code=""; # in case colours arn't avil
+	fi
+}
+
+PROMPT_COMMAND="get_return_code; get_git_branch; $PROMPT_COMMAND"
 
 if [ "$color_prompt" = yes ]; then
-	bold="\e[1;39m"
-	orange="\e[38;5;208m"
-	red="\e[1;31m"
-	green="\e[1;32m"
-	yellow="\e[1;33m"
-	blue="\e[1;34m"
-	lightblue="\e[1;36m"
-	reset="\e[0m"
-	
 	user="\u"
 	host="\h"
 	path="\w"
-	prom="\\$"
-	gitb="\[$bold$green\]\$git_branch\[$reset\]"
+	prom="\[\$return_code_gfx\]\$return_code\\$\[$reset\]"
+	gitb="\$git_branch"
 	
 	if [[ "`whoami`" == "kobra" ]]; then
 		user="\[$bold$orange\]$user\[$reset\]"
@@ -238,7 +261,7 @@ if [ "$color_prompt" = yes ]; then
 		host="\[$lightblue\]$host\[$reset\]"
 	fi
 	
-	path="\[$blue\]$path"
+	path="\[$blue\]$path\[$reset\]"
 	
 	PS1=`echo "$user@$host:$path$gitb$prom "`
 	
@@ -263,3 +286,7 @@ xterm*|rxvt*)
 	;;
 esac
 
+
+function update_bashrc {
+	wget "https://raw.githubusercontent.com/KateAdams/.bashrc/master/.bashrc" -O ~/.bashrc
+}
