@@ -99,6 +99,9 @@ alias rm='trash-put'
 # luarocks install cw
 #if [ -n "$PS1" ]; then PATH=`cw-definitions-path`:$PATH; export PATH; fi
 
+# for gcc colours
+export GCC_COLORS=auto
+
 alias vps="ssh kobra@kateadams.eu"
 alias vpn="sudo sshuttle --dns -r kobra@kateadams.eu 0/0"
 
