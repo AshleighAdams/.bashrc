@@ -99,6 +99,8 @@ alias rm='trash-put'
 # luarocks install cw
 #if [ -n "$PS1" ]; then PATH=`cw-definitions-path`:$PATH; export PATH; fi
 
+alias please='sudo $(history -p !-1)'
+
 # for gcc colours
 export GCC_COLORS=auto
 
