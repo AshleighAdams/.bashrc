@@ -128,7 +128,7 @@ shopt -s autocd # ../.. Dropbox/ etc... changes dir
 alias hexdump="hexdump -C"
 alias gource="gource --max-files 0 -i 0"
 alias markauto="sudo apt-mark auto "
-alias gedit="GTK_THEME=Adwaita:dark gedit"
+alias gedit="GTK_THEME=AdwaitaAccent:dark gedit"
 alias ping="ping -n"
 alias make="make -j3" # make should use 3 threads to build
 
