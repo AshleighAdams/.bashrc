@@ -1,0 +1,121 @@
+#!/usr/bin/env lua
+
+local TRUNK_GIT = os.getenv "CDCOMPACT_TRUNK_GIT" or "elipsis" -- slash, ascii
+local TRUNK_HOMESAMEUSER = os.getenv "CDCOMPACT_TRUNK_HOMESAMEUSER" or "deeper" -- always, never
+local TRUNK_MINUNIQUE = tonumber(os.getenv "CDCOMPACT_TRUNK_MINUNIQUE") or 1 -- 0 = off
+local TRUNK_MINUNIQUE_CWD = tonumber(os.getenv "CDCOMPACT_TRUNK_MINUNIQUE_CWD") or 16 -- 0 = off
+local TRUNK_MINUNIQUE_POSTFIX = os.getenv "CDCOMPACT_TRUNK_POSTFIX" or ""
+local TRUNK_MINUNIQUE_POSTFIX_CWD = os.getenv "CDCOMPACT_TRUNK_POSTFIX_CWD" or "…"
+
+
+local lfs = require("lfs")
+
+local inpath = io.stdin:read("*a")
+
+local parts = {}
+local realm = "/"
+
+inpath:gsub("[^/\n\r]+", function(dir) table.insert(parts, {name=dir}) end)
+
+if #parts == 0 then
+	io.stdout:write(inpath)
+	return
+end
+
+if parts[1].name == "home" and parts[2] then
+	parts[1].remove = true
+	realm = "~"
+	
+	parts[2].ishome = true
+	parts[2].keepfull = true
+
+	if parts[2].name == os.getenv "USER" then
+		if
+			(TRUNK_HOMESAMEUSER == "always") or
+			(TRUNK_HOMESAMEUSER == "deeper" and not parts[#parts].ishome)
+		then
+			parts[2].remove = true
+			realm = "~/"
+		end
+	end
+elseif parts[1].name == "root" then
+	realm = "~"
+	parts[1].ishome = true
+	parts[1].keepfull = true
+	if os.getenv "USER" == "root" then
+		parts[1].remove = true
+		realm = "~/"
+	end
+end
+
+-- will also keep our username in the ~ prompt
+if parts[#parts].ishome then
+	if TRUNK_HOMESAMEUSER == "deeper" then
+		parts[#parts].keepfull = true
+	end
+else
+	--parts[#parts].keepfull = true
+end
+
+-- simplify dir names
+local tbl = {}
+for k,dir in ipairs(parts) do
+	local parentpath="/"..table.concat(tbl, "/")
+	table.insert(tbl, dir.name)
+	local path="/"..table.concat(tbl, "/")
+	
+	local safelen = k == #parts and TRUNK_MINUNIQUE_CWD or TRUNK_MINUNIQUE
+	
+	-- calculate smallest name
+	if safelen > 0 then
+		local others = {}
+		for dir in lfs.dir(parentpath) do table.insert(others, dir) end
+		
+		safelen = safelen - 1
+		while #others > 1 do
+			safelen = safelen + 1
+			local safestr = dir.name:sub(1, safelen)
+			for i = #others, 1, -1 do
+				if others[i]:sub(1, safelen) ~= safestr then
+					table.remove(others, i)
+				end
+			end
+		end
+		
+		dir.display = dir.name:sub(1,safelen)
+		if dir.display:len() < dir.name:len() then
+			dir.display = dir.display .. (k == #parts and TRUNK_MINUNIQUE_POSTFIX_CWD or TRUNK_MINUNIQUE_POSTFIX)
+		end
+	end
+	
+	
+	
+	if (lfs.attributes(path.."/.git") or {}).mode == "directory" then
+		dir.keepfull = true
+		for i = 1, k - 1 do
+			if TRUNK_GIT == "slash" then
+				parts[i].display=""
+			elseif TRUNK_GIT == "elipsis" or TRUNK_GIT == "ascii" or TRUNK_GIT == "realm" then
+				parts[i].remove = true
+			end
+		end
+		
+		if TRUNK_GIT == "elipsis" or TRUNK_GIT == "ascii" then
+			parts[k - 1].display = TRUNK_GIT == "ascii" and "..." or "…"
+			parts[k - 1].remove = false
+		elseif TRUNK_GIT == "realm" then
+			dir.remove = true
+			realm = dir.name .. "/"
+		end
+	end
+end
+
+io.stdout:write(realm)
+for k,dir in ipairs(parts) do
+	if not dir.remove then
+		io.stdout:write(dir.keepfull and dir.name or dir.display or dir.name)
+		if k < #parts then
+			io.stdout:write("/")
+		end
+	end
+end
