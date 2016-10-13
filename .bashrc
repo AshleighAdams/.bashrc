@@ -8,6 +8,10 @@ case $- in
       *) return;;
 esac
 
+if [[ $TERMINIX_ID ]]; then
+	source /etc/profile.d/vte.sh
+fi
+
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
 HISTCONTROL=ignoreboth
@@ -107,23 +111,23 @@ export GCC_COLORS=auto
 alias vps="ssh kobra@kateadams.eu"
 alias vpn="sudo sshuttle --dns -r kobra@kateadams.eu 0/0"
 
-function cd {
-	command cd $1 > /dev/null # pipe stdout, but not stderr
-	local ret=$?
-	
-	if [[ $ret == 0 ]]; then
-		# \r     = return to start of line
-		# \e[1A  = move cursor up a line
-		# \e[J   = clear everything after the cursor
-		echo -ne "\r\e[1A\e[J"
-	fi
-	
-	return $ret
-}
+#function cd {
+#	command cd "$1" > /dev/null # pipe stdout, but not stderr
+#	local ret=$?
+#	
+#	if [[ $ret == 0 ]]; then
+#		# \r     = return to start of line
+#		# \e[1A  = move cursor up a line
+#		# \e[J   = clear everything after the cursor
+#		echo -ne "\r\e[1A\e[J"
+#	fi
+#	
+#	return $ret
+#}
 
 
-alias ..="cd .."
-shopt -s autocd # ../.. Dropbox/ etc... changes dir
+# alias ..="cd .."
+# shopt -s autocd # ../.. Dropbox/ etc... changes dir
 # canonical, <offset> <bytes> <ascii>
 alias hexdump="hexdump -C"
 alias gource="gource --max-files 0 -i 0"
@@ -135,41 +139,10 @@ alias make="make -j3" # make should use 3 threads to build
 # This clear is the real one.
 #alias clear="echo -ne '\033c'"
 
-export DEBFULLNAME="Kate Adams"
-export DEBEMAIL="self@kateadams.eu"
+export DEBFULLNAME="Ashleigh Adams"
+export DEBEMAIL="ashleigh.k.adams@gmail.com"
+export PATH="$PATH:~/.local/bin"
 
-upload_luaflare_packages () {
-	# make sure we have our packages
-	if [[ ! -d packages/ ]]; then
-		echo "packages/ not found, exiting"
-		return 1
-	fi
-	
-	echo "removing old packages..."
-	vps rm luaflare-debian-repo/packages/luaflare*
-	
-	packages=`find packages/ -type f`
-	for package in $packages; do
-		echo "uploading $package..."
-		cat "$package" | vps "cat /dev/stdin > luaflare-debian-repo/$package"
-	done
-	
-	vps -t bash -c "'
-		cd luaflare-debian-repo
-		./update.sh
-	'"
-}
-
-upload_luaflare_docs () {
-	[[ ! -f build-docs.lua ]] && return 1
-	./build-docs.lua pdf
-	echo "uploading pdf..."
-	cat tmp/luaflare-documentation.pdf | vps "cat /dev/stdin > kateadams.eu/static/\*.kateadams.eu/luaflare-documentation.pdf"
-
-	./build-docs.lua epub
-	echo "uploading epub..."
-	cat tmp/luaflare-documentation-final.epub | vps "cat /dev/stdin > kateadams.eu/static/\*.kateadams.eu/luaflare-documentation.epub"
-}
 
 # 256 colour support
 if [ "$TERM" == "xterm" ]; then
@@ -189,6 +162,10 @@ yellow=`echo -en "\e[1;33m"`
 blue=`echo -en "\e[1;34m"`
 lightblue=`echo -en "\e[1;36m"`
 reset=`echo -en "\e[0m"`
+invert=`echo -en "\e[7m"`
+underline=`echo -en "\e[4m"`
+italic=`echo -en "\e[3m"`
+blink=`echo -en "\e[5m"`
 
 # Inject git branch into dir
 # Functions
@@ -232,44 +209,77 @@ function get_git_branch {
 
 return_code=""
 return_code_gfx=""
+return_code_bad="$red"
+prompt_path="$(pwd)"
 function get_return_code {
 	local ret="$?"
 	if [[ $ret == "0" ]]; then
 		return_code_gfx="";
 		return_code="";
 	else
-		return_code_gfx=`echo -e "$red"`;
+		return_code_gfx="$return_code_bad";
 		return_code=""; # in case colours arn't avil
+	fi
+	
+	if [[ -e "$HOME/.cdcompact" ]]; then
+		prompt_path="$(pwd | "$HOME/.cdcompact")"
+	else
+		prompt_path="$(pwd)"
 	fi
 }
 
 PROMPT_COMMAND="get_return_code; get_git_branch; $PROMPT_COMMAND"
+#PROMPT_NOCOMPACT=yes
 
 if [ "$color_prompt" = yes ]; then
 	user="\u"
+	usercol=""
 	host="\h"
-	path="\w"
-	prom="\[\$return_code_gfx\]\$return_code\\$\[$reset\]"
+	hostcol=""
+	#path="\w"
+	path="\$prompt_path"
+
+	pathcol=""
+
+	prom="\[\$return_code_gfx\]\\$\[$reset\]"
 	gitb="\$git_branch"
-	
+
 	if [[ "`whoami`" == "kobra" ]]; then
-		user="\[$bold$orange\]$user\[$reset\]"
+		#user="\[$bold$orange\]$user\[$reset\]"
+		usercol="$orange"
 	elif [[ "`whoami`" == "root" ]]; then
-		user="\[$bold$red\]$user\[$reset\]"
+		#user="\[$bold$red\]$user\[$reset\]"
+		usercol="$red"
 	fi
-	
+
 	if [[ "`hostname`" == "pc" ]]; then
-		host="\[$red\]$host\[$reset\]"
+		#host="\[$red\]$host\[$reset\]"
+		hostcol="$red"
 	elif [[ "`hostname`" == "laptop" ]]; then
-		host="\[$green\]$host\[$reset\]"
+		#host="\[$green\]$host\[$reset\]"
+		hostcol="$green"
 	elif [[ "`hostname`" == "vps" ]]; then
-		host="\[$lightblue\]$host\[$reset\]"
+		#host="\[$lightblue\]$host\[$reset\]"
+		hostcol="$lightblue"
 	fi
-	
-	path="\[$blue\]$path\[$reset\]"
-	
-	PS1=`echo "$user@$host:$path$gitb$prom "`
-	
+
+
+
+	if [[ "$PROMPT_NOCOMPACT" != "yes" ]]; then
+		return_code_bad="$italic$usercol"
+		PS1=`echo "\[$hostcol\]$path\[$reset\]$gitb\[$usercol\]$prom "`
+	else
+		export CDCOMPACT_TRUNK_GIT=ascii
+		export CDCOMPACT_TRUNK_MINUNIQUE=0
+		export CDCOMPACT_TRUNK_HOMESAMEUSER=always
+
+		prom="\[\$return_code_gfx\]\$return_code\\$\[$reset\]"
+		path="\[$blue\]$path\[$reset\]"
+		PS1=`echo "\[$bold$usercol\]$user\[$reset\]@\[$bold$hostcol\]$host\[$reset\]:$path$gitb$prom "`
+	fi
+
+
+
 	#if [ "`hostname`" == "pc" ]; then
 	#	PS1="\[\e[1;39m\e[38;5;208m\]\u\[\e[0m\]@\[\e[1;31m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[1;39m\e[1;32m\]\$git_branch\[\e[0m\]\$ "
 	#elif [ "`hostname`" == "laptop" ]; then
@@ -291,7 +301,12 @@ xterm*|rxvt*)
 	;;
 esac
 
-
 function update_bashrc {
 	wget "https://raw.githubusercontent.com/KateAdams/.bashrc/master/.bashrc" -O ~/.bashrc
 }
+
+function update_cdcompact {
+	wget "https://raw.githubusercontent.com/KateAdams/.bashrc/master/.cdcompact" -O ~/.cdcompact
+	chmod +x ~/.cdcompact
+}
+
