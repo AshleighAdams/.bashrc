@@ -255,7 +255,7 @@ if [ "$color_prompt" = yes ]; then
 	if [[ "`hostname`" == "pc" ]]; then
 		#host="\[$red\]$host\[$reset\]"
 		hostcol="$red"
-	elif [[ "`hostname`" == "laptop" ]]; then
+	elif [[ "`hostname`" == "lappy" ]]; then
 		#host="\[$green\]$host\[$reset\]"
 		hostcol="$green"
 	elif [[ "`hostname`" == "vps" ]]; then
