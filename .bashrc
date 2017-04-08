@@ -8,8 +8,9 @@ case $- in
       *) return;;
 esac
 
-if [[ $TERMINIX_ID ]]; then
+if [ $TILEX_ID ] || [ $VTE_VERSION ]; then
 	source /etc/profile.d/vte.sh
+	source /usr/share/tilix/scripts/tilix_int.sh
 fi
 
 # don't put duplicate lines or lines starting with space in the history.
