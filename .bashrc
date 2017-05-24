@@ -109,9 +109,6 @@ alias please='sudo $(history -p !-1)'
 # for gcc colours
 export GCC_COLORS=auto
 
-alias vps="ssh kobra@kateadams.eu"
-alias vpn="sudo sshuttle --dns -r kobra@kateadams.eu 0/0"
-
 #function cd {
 #	command cd "$1" > /dev/null # pipe stdout, but not stderr
 #	local ret=$?
@@ -305,11 +302,11 @@ xterm*|rxvt*)
 esac
 
 function update_bashrc {
-	wget "https://raw.githubusercontent.com/KateAdams/.bashrc/master/.bashrc" -O ~/.bashrc
+	wget "https://raw.githubusercontent.com/AshleighAdams/.bashrc/master/.bashrc" -O ~/.bashrc
 }
 
 function update_cdcompact {
-	wget "https://raw.githubusercontent.com/KateAdams/.bashrc/master/.cdcompact" -O ~/.cdcompact
+	wget "https://raw.githubusercontent.com/AshleighAdams/.bashrc/master/.cdcompact" -O ~/.cdcompact
 	chmod +x ~/.cdcompact
 }
 
