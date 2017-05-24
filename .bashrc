@@ -259,6 +259,8 @@ if [ "$color_prompt" = yes ]; then
 	elif [[ "`hostname`" == "lappy" ]]; then
 		#host="\[$green\]$host\[$reset\]"
 		hostcol="$green"
+	elif [[ "`hostname`" == "pi" ]]; then
+		hostcol="$orange"
 	elif [[ "`hostname`" == "vps" ]]; then
 		#host="\[$lightblue\]$host\[$reset\]"
 		hostcol="$lightblue"
