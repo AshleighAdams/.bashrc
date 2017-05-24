@@ -260,7 +260,7 @@ if [ "$color_prompt" = yes ]; then
 		#host="\[$green\]$host\[$reset\]"
 		hostcol="$green"
 	elif [[ "`hostname`" == "pi" ]]; then
-		hostcol="$orange"
+		hostcol="$yellow"
 	elif [[ "`hostname`" == "vps" ]]; then
 		#host="\[$lightblue\]$host\[$reset\]"
 		hostcol="$lightblue"
